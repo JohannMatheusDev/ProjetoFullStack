@@ -2,6 +2,11 @@
 
 Sistema de Gestão Integrada (ERP) desenvolvido como SaaS, centralizando dados de finanças, estoque e vendas em uma única plataforma.
 
+## Time
+
+- **Du** — Eduardo Sochodolak
+- **Jojo** — Johann Matheus Pedroso da Silva
+
 ## Problema
 
 Pequenas e médias empresas operam com dados fragmentados entre planilhas, sistemas isolados e processos manuais. Isso gera inconsistência de informações, retrabalho e decisões baseadas em dados desatualizados.
@@ -30,11 +35,6 @@ O **ERP Du Jojo** resolve isso unificando os módulos de finanças, estoque e ve
 | Banco | PostgreSQL |
 | Auth | JWT |
 | Docs | Swagger |
-
-## Time
-
-- **Du** — Eduardo Sochodolak
-- **Jojo** — Johann Matheus Pedroso da Silva
 
 ## Setup
 
