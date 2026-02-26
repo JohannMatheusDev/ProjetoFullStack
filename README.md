@@ -44,4 +44,5 @@ npm install
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000).
+Acesse Localmente [http://localhost:3000](http://localhost:3000).
+Acesse Online [erp-dujojo.vercel.app](erp-dujojo.vercel.app)
