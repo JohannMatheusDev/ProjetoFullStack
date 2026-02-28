@@ -21,7 +21,7 @@ O **ERP Du Jojo** resolve isso unificando os módulos de finanças, estoque e ve
 
 ## Protótipo
 
-> Link Figma: _a definir_
+> Link Figma: [Figma](https://www.figma.com/design/zepJqvuStQap501MYW3pyQ/ERP?node-id=29-120&t=VdUnYthv31phVkXy-1)
 
 ## Stack
 
