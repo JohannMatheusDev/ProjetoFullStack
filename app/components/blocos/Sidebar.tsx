@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { LayoutDashboard, TrendingUp, Package, ShoppingCart } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { LayoutDashboard, TrendingUp, Package, ShoppingCart, LogOut } from "lucide-react";
 import { ItemNav } from "@/app/components/compostos/ItemNav";
 import { Divisor } from "@/app/components/ui/Divisor";
+import { buscarSessao, encerrarSessao } from "@/app/lib/authMock";
 import type { ItemNavegacao } from "@/app/types";
 
 const itens: ItemNavegacao[] = [
@@ -15,6 +17,15 @@ const itens: ItemNavegacao[] = [
 ];
 
 export function Sidebar() {
+  const router = useRouter();
+  const nome = buscarSessao() ?? "Usuário";
+  const inicial = nome.charAt(0).toUpperCase();
+
+  const sair = () => {
+    encerrarSessao();
+    router.push("/login");
+  };
+
   return (
     <aside className="flex h-screen w-56 flex-col bg-zinc-950 px-3 py-4 shrink-0">
       <Link href="/dashboard" className="flex items-center gap-2.5 px-2 mb-6">
@@ -30,12 +41,19 @@ export function Sidebar() {
         <Divisor />
         <div className="px-2 flex items-center gap-2.5">
           <div className="h-7 w-7 rounded-full bg-zinc-700 flex items-center justify-center text-xs text-white font-semibold shrink-0">
-            D
+            {inicial}
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-white truncate">Du</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-white truncate">{nome}</p>
             <p className="text-[10px] text-zinc-500">Admin</p>
           </div>
+          <button
+            onClick={sair}
+            title="Sair"
+            className="text-zinc-500 hover:text-red-400 transition-colors cursor-pointer shrink-0"
+          >
+            <LogOut size={14} />
+          </button>
         </div>
       </div>
     </aside>
