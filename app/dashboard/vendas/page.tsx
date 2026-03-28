@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -14,12 +14,6 @@ import { Spinner } from "@/app/components/ui/Spinner";
 import { useToast } from "@/app/contexts/ToastContext";
 import type { Venda, StatusVenda, VarianteEmblema } from "@/app/types";
 
-const metricas = [
-  { titulo: "Vendas no mês", valor: "1.284", variacao: 8.1, icone: ShoppingCart },
-  { titulo: "Clientes ativos", valor: "342", variacao: 15.3, icone: Users },
-  { titulo: "Ticket médio", valor: "R$ 412", variacao: -2.4, icone: TrendingUp },
-  { titulo: "NPS", valor: "74", variacao: 5.0, icone: Star },
-];
 
 const varianteStatus: Record<StatusVenda, VarianteEmblema> = {
   concluido: "sucesso",
@@ -53,6 +47,23 @@ export default function Vendas() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormVenda>({ resolver: zodResolver(esquema) });
+
+  const metricas = useMemo(() => {
+    const concluidas = vendas.filter((v) => v.status === "concluido");
+    const parsear = (val: string) =>
+      parseFloat(val.replace("R$", "").trim().replace(/\./g, "").replace(",", ".")) || 0;
+    const ticketMedio =
+      concluidas.length > 0
+        ? Math.round(concluidas.reduce((a, v) => a + parsear(v.valor), 0) / concluidas.length)
+        : 0;
+    const clientesUnicos = new Set(vendas.map((v) => v.cliente)).size;
+    return [
+      { titulo: "Vendas no mês", valor: vendas.length.toLocaleString("pt-BR"), variacao: 8.1, icone: ShoppingCart },
+      { titulo: "Clientes ativos", valor: String(clientesUnicos), variacao: 15.3, icone: Users },
+      { titulo: "Ticket médio", valor: `R$ ${ticketMedio.toLocaleString("pt-BR")}`, variacao: -2.4, icone: TrendingUp },
+      { titulo: "NPS", valor: "74", variacao: 5.0, icone: Star },
+    ];
+  }, [vendas]);
 
   const recarregar = async () => {
     const res = await fetch("/api/vendas");

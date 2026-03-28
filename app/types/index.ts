@@ -23,13 +23,16 @@ export type Venda = {
 };
 
 export type Produto = {
+  id: string;
   nome: string;
   categoria: string;
   quantidade: number;
+  preco: string;
   status: StatusProduto;
 };
 
 export type Lancamento = {
+  id: string;
   descricao: string;
   tipo: TipoLancamento;
   valor: string;

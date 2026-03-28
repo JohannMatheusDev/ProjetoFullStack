@@ -19,9 +19,24 @@ O **ERP Du Jojo** resolve isso unificando os módulos de finanças, estoque e ve
 - **Estoque:** gestão de produtos, entradas e saídas
 - **Vendas:** registro de pedidos e acompanhamento de clientes
 
-## D2 — The Shell
+## D3 — UI Milestone
 
-Para a entrega D2 foi implementada a estrutura completa do shell da aplicação: rotas principais (`/dashboard`, `/financas`, `/estoque`, `/vendas`, `/login`, `/cadastro`) com App Router, layout persistente no dashboard (sidebar + topbar via `CascoLayout`), grupo de rotas `(auth)` isolando as páginas de acesso, e um UI Kit próprio com 5 componentes atômicos (`Botao`, `Campo`, `Divisor`, `Emblema`, `Spinner`) complementado por compostos (`CampoRotulado`, `CartaoMetrica`, `ItemNav`) e blocos de layout (`Sidebar`, `Topbar`, `CascoLayout`), todos tipados em TypeScript sem `any`.
+Interface completa com estados complexos, validação de formulários e consumo de API mock.
+
+**Módulos implementados:**
+
+- **Estoque:** listagem de produtos com status dinâmico, modal de criação com formulário validado (Zod + RHF), edição inline via modal pré-preenchido e remoção com toast de feedback. Métricas de total em estoque e itens críticos calculadas em tempo real.
+- **Vendas:** registro de nova venda via modal validado, listagem com badges de status. Métricas de vendas no mês, clientes ativos e ticket médio calculadas a partir dos dados.
+- **Finanças:** lançamentos com tipo entrada/saída, modal de criação com select validado. Métricas de entradas, saídas e saldo líquido recalculadas a cada novo lançamento.
+- **Autenticação:** fluxo completo de login e cadastro com validação por Zod, toasts de erro/sucesso e redirect automático.
+
+**Destaques técnicos:**
+
+- 5 formulários com React Hook Form + Zod (login, cadastro, nova venda, novo produto, novo lançamento)
+- Toast system global via Context API com auto-dismiss
+- Guarda de rotas (`GuardaAuth`) sem divergência de hidratação SSR/cliente
+- API mock com estado em memória — GET, POST, PUT e DELETE
+- TypeScript strict: zero `any`, zero erros de lint
 
 ## Estrutura
 
