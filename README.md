@@ -19,46 +19,63 @@ O **ERP Du Jojo** resolve isso unificando os módulos de finanças, estoque e ve
 - **Estoque:** gestão de produtos, entradas e saídas
 - **Vendas:** registro de pedidos e acompanhamento de clientes
 
-## D3 — UI Milestone
+## D4 — Data Core
 
-Interface completa com estados complexos, validação de formulários e consumo de API mock.
+Back-end inicial com NestJS, Prisma ORM e banco de dados PostgreSQL (Neon). Swagger ativo com documentação de todas as rotas.
 
 **Módulos implementados:**
 
-- **Estoque:** listagem de produtos com status dinâmico, modal de criação com formulário validado (Zod + RHF), edição inline via modal pré-preenchido e remoção com toast de feedback. Métricas de total em estoque e itens críticos calculadas em tempo real.
-- **Vendas:** registro de nova venda via modal validado, listagem com badges de status. Métricas de vendas no mês, clientes ativos e ticket médio calculadas a partir dos dados.
-- **Finanças:** lançamentos com tipo entrada/saída, modal de criação com select validado. Métricas de entradas, saídas e saldo líquido recalculadas a cada novo lançamento.
-- **Autenticação:** fluxo completo de login e cadastro com validação por Zod, toasts de erro/sucesso e redirect automático.
+- **Usuários:** CRUD completo — criação com validação de e-mail único, listagem, busca por ID e remoção.
+- **Vendas:** CRUD completo — registro com FK para usuário, atualização de status (PENDENTE / CONCLUIDO / CANCELADO).
+- **Estoque:** CRUD completo — status do produto (normal / baixo / crítico) calculado no service layer a partir da quantidade.
+- **Finanças:** CRUD + rota `GET /financas/resumo` retornando entradas, saídas e saldo consolidado.
 
 **Destaques técnicos:**
 
-- 5 formulários com React Hook Form + Zod (login, cadastro, nova venda, novo produto, novo lançamento)
-- Toast system global via Context API com auto-dismiss
-- Guarda de rotas (`GuardaAuth`) sem divergência de hidratação SSR/cliente
-- API mock com estado em memória — GET, POST, PUT e DELETE
-- TypeScript strict: zero `any`, zero erros de lint
+- `PrismaModule` global com `PrismaService` injetável em todos os módulos
+- DTOs com `class-validator` e `class-transformer` em todas as rotas de escrita
+- Enums `StatusVenda` e `TipoLancamento` tipados no banco via Prisma
+- Relacionamento `Venda → Usuario` com FK normalizada
+- Campos monetários como `Decimal(10,2)` no PostgreSQL
+- Swagger completo em `/api` com `ApiTags` e `ApiOperation` por rota
+- Migrations versionadas em `backend/prisma/migrations/`
 
 ## Estrutura
 
 ```
-fullstack/app/
-├── (auth)/
-│   ├── login/page.tsx
-│   └── cadastro/page.tsx
-├── dashboard/
-│   ├── layout.tsx         
-│   ├── page.tsx
-│   ├── financas/page.tsx
-│   ├── estoque/page.tsx
-│   └── vendas/page.tsx
-├── components/
-│   ├── ui/                
-│   ├── compostos/          
-│   └── blocos/  
-├── contexts/               
-├── types/                  
-├── layout.tsx
-└── page.tsx
+fullstack/
+├── frontend/
+│   └── app/
+│       ├── (auth)/
+│       │   ├── login/page.tsx
+│       │   └── cadastro/page.tsx
+│       ├── api/                   ← mock (substituído no D5)
+│       ├── dashboard/
+│       │   ├── layout.tsx
+│       │   ├── page.tsx
+│       │   ├── financas/page.tsx
+│       │   ├── estoque/page.tsx
+│       │   └── vendas/page.tsx
+│       ├── components/
+│       │   ├── ui/
+│       │   ├── compostos/
+│       │   └── blocos/
+│       ├── contexts/
+│       ├── types/
+│       ├── layout.tsx
+│       └── page.tsx
+└── backend/
+    ├── prisma/
+    │   ├── schema.prisma
+    │   └── migrations/
+    └── src/
+        ├── main.ts
+        ├── app.module.ts
+        ├── prisma/
+        ├── usuarios/
+        ├── vendas/
+        ├── estoque/
+        └── financas/
 ```
 
 ## Protótipo
@@ -80,11 +97,20 @@ fullstack/app/
 
 ## Setup
 
+**Frontend**
 ```bash
-cd fullstack
+cd frontend
 npm install
 npm run dev
 ```
+Acesse em [http://localhost:3000](http://localhost:3000)
 
-Acesse Localmente [http://localhost:3000](http://localhost:3000).
-Acesse Online [erp-dujojo.vercel.app](erp-dujojo.vercel.app)
+**Backend**
+```bash
+cd backend
+cp .env.example .env   # configurar DATABASE_URL
+npm install
+npx prisma migrate dev --name init
+npm run start:dev
+```
+API em [http://localhost:3001](http://localhost:3001) — Swagger em [http://localhost:3001/api](http://localhost:3001/api)

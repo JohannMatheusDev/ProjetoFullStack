@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id           String   @id @default(uuid())
+  nome         String
+  email        String   @unique
+  senha        String
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+  vendas       Venda[]
+
+  @@map("usuarios")
+}
+
+model Venda {
+  id           String      @id @default(uuid())
+  cliente      String
+  valor        Decimal     @db.Decimal(10, 2)
+  status       StatusVenda @default(PENDENTE)
+  usuarioId    String
+  usuario      Usuario     @relation(fields: [usuarioId], references: [id])
+  criadoEm    DateTime    @default(now())
+  atualizadoEm DateTime   @updatedAt
+
+  @@map("vendas")
+}
+
+enum StatusVenda {
+  CONCLUIDO
+  PENDENTE
+  CANCELADO
+}
+
+model Produto {
+  id           String   @id @default(uuid())
+  nome         String
+  categoria    String
+  quantidade   Int
+  preco        Decimal  @db.Decimal(10, 2)
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@map("produtos")
+}
+
+model Lancamento {
+  id        String         @id @default(uuid())
+  descricao String
+  tipo      TipoLancamento
+  valor     Decimal        @db.Decimal(10, 2)
+  criadoEm DateTime       @default(now())
+
+  @@map("lancamentos")
+}
+
+enum TipoLancamento {
+  ENTRADA
+  SAIDA
+}

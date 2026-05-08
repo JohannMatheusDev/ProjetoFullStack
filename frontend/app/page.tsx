@@ -33,12 +33,6 @@ export default function Home() {
         </Link>
       </div>
 
-      <Link
-        href="/dashboard"
-        className="text-xs text-[var(--foreground)] opacity-40 hover:opacity-70 transition-opacity underline underline-offset-2"
-      >
-        Ver como visitante
-      </Link>
     </main>
   );
 }
