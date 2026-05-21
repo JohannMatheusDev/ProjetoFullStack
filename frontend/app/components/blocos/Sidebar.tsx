@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { LayoutDashboard, TrendingUp, Package, ShoppingCart, LogOut } from "lucide-react";
 import { ItemNav } from "@/app/components/compostos/ItemNav";
 import { Divisor } from "@/app/components/ui/Divisor";
-import { buscarSessao, encerrarSessao } from "@/app/lib/authMock";
+import { buscarSessao, encerrarSessao } from "@/app/lib/auth";
 import type { ItemNavegacao } from "@/app/types";
 
 const itens: ItemNavegacao[] = [
@@ -18,7 +18,8 @@ const itens: ItemNavegacao[] = [
 
 export function Sidebar() {
   const router = useRouter();
-  const nome = buscarSessao() ?? "Usuário";
+  const usuario = buscarSessao();
+  const nome = usuario?.nome ?? "Usuário";
   const inicial = nome.charAt(0).toUpperCase();
 
   const sair = () => {

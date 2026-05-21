@@ -24,8 +24,11 @@ model Venda {
   cliente      String
   valor        Decimal     @db.Decimal(10, 2)
   status       StatusVenda @default(PENDENTE)
+  quantidade   Int         @default(1)
   usuarioId    String
   usuario      Usuario     @relation(fields: [usuarioId], references: [id])
+  produtoId    String?
+  produto      Produto?    @relation(fields: [produtoId], references: [id])
   criadoEm    DateTime    @default(now())
   atualizadoEm DateTime   @updatedAt
 
@@ -44,6 +47,7 @@ model Produto {
   categoria    String
   quantidade   Int
   preco        Decimal  @db.Decimal(10, 2)
+  vendas       Venda[]
   criadoEm    DateTime @default(now())
   atualizadoEm DateTime @updatedAt
 

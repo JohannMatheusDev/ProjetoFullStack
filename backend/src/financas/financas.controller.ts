@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { FinancasService } from './financas.service';
 import { CriarLancamentoDto } from './dto/criar-lancamento.dto';
+import { JwtGuarda } from '../auth/guardas/jwt.guarda';
 
 @ApiTags('Finanças')
+@ApiBearerAuth()
+@UseGuards(JwtGuarda)
 @Controller('financas')
 export class FinancasController {
   constructor(private readonly service: FinancasService) {}

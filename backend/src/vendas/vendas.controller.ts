@@ -1,18 +1,25 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards, Req } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import type { Request } from 'express';
 import { VendasService } from './vendas.service';
 import { CriarVendaDto } from './dto/criar-venda.dto';
 import { AtualizarVendaDto } from './dto/atualizar-venda.dto';
+import { JwtGuarda } from '../auth/guardas/jwt.guarda';
 
 @ApiTags('Vendas')
+@ApiBearerAuth()
+@UseGuards(JwtGuarda)
 @Controller('vendas')
 export class VendasController {
   constructor(private readonly service: VendasService) {}
 
   @Post()
   @ApiOperation({ summary: 'Registrar nova venda' })
-  criar(@Body() dto: CriarVendaDto) {
-    return this.service.criar(dto);
+  criar(
+    @Body() dto: CriarVendaDto,
+    @Req() req: Request & { user: { id: string } },
+  ) {
+    return this.service.criar(dto, req.user.id);
   }
 
   @Get()

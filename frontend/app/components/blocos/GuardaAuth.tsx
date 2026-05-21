@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { buscarSessao } from "@/app/lib/authMock";
+import { buscarToken } from "@/app/lib/api";
 
 export function GuardaAuth({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [autorizado, setAutorizado] = useState(false);
 
   useEffect(() => {
-    const sessao = buscarSessao();
-    if (!sessao) {
+    const token = buscarToken();
+    if (!token) {
       router.replace("/login");
     } else {
       setAutorizado(true);

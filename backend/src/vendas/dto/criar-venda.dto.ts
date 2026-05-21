@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsEnum, IsUUID, IsPositive } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsPositive, IsUUID, IsInt, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { StatusVenda } from '@prisma/client';
 
 export class CriarVendaDto {
   @ApiProperty({ example: 'Bernardo Barbosa' })
@@ -14,12 +13,15 @@ export class CriarVendaDto {
   @Type(() => Number)
   valor: number;
 
-  @ApiPropertyOptional({ enum: StatusVenda, default: StatusVenda.PENDENTE })
+  @ApiPropertyOptional({ example: 'uuid-do-produto' })
   @IsOptional()
-  @IsEnum(StatusVenda)
-  status?: StatusVenda;
-
-  @ApiProperty({ example: 'uuid-do-usuario' })
   @IsUUID()
-  usuarioId: string;
+  produtoId?: string;
+
+  @ApiPropertyOptional({ example: 2, default: 1 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  quantidade?: number;
 }

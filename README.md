@@ -16,29 +16,58 @@ O **ERP Du Jojo** resolve isso unificando os módulos de finanças, estoque e ve
 ## Solução
 
 - **Finanças:** controle de receitas, despesas e fluxo de caixa
-- **Estoque:** gestão de produtos, entradas e saídas
-- **Vendas:** registro de pedidos e acompanhamento de clientes
+- **Estoque:** gestão de produtos, entradas e saídas com alertas de nível crítico
+- **Vendas:** registro de pedidos vinculados ao estoque, confirmação e cancelamento de pagamento
 
-## D4 — Data Core
+## Stack
 
-Back-end inicial com NestJS, Prisma ORM e banco de dados PostgreSQL (Neon). Swagger ativo com documentação de todas as rotas.
+| Camada | Tecnologia |
+|--------|-----------|
+| Framework | Next.js 16 (App Router) |
+| Linguagem | TypeScript 5 (strict) |
+| Estilização | Tailwind CSS v4 |
+| Formulários | React Hook Form + Zod |
+| Back-end | NestJS + Prisma ORM |
+| Banco | PostgreSQL (Neon) |
+| Auth | JWT + Passport |
+| Docs | Swagger |
 
-**Módulos implementados:**
 
-- **Usuários:** CRUD completo — criação com validação de e-mail único, listagem, busca por ID e remoção.
-- **Vendas:** CRUD completo — registro com FK para usuário, atualização de status (PENDENTE / CONCLUIDO / CANCELADO).
-- **Estoque:** CRUD completo — status do produto (normal / baixo / crítico) calculado no service layer a partir da quantidade.
-- **Finanças:** CRUD + rota `GET /financas/resumo` retornando entradas, saídas e saldo consolidado.
+## D5 — Security
 
-**Destaques técnicos:**
+Autenticação JWT, proteção de rotas e integração completa front-end ↔ back-end.
 
-- `PrismaModule` global com `PrismaService` injetável em todos os módulos
-- DTOs com `class-validator` e `class-transformer` em todas as rotas de escrita
-- Enums `StatusVenda` e `TipoLancamento` tipados no banco via Prisma
-- Relacionamento `Venda → Usuario` com FK normalizada
-- Campos monetários como `Decimal(10,2)` no PostgreSQL
-- Swagger completo em `/api` com `ApiTags` e `ApiOperation` por rota
-- Migrations versionadas em `backend/prisma/migrations/`
+**Autenticação:**
+
+- `POST /auth/cadastro` — cria conta, retorna JWT + dados do usuário
+- `POST /auth/login` — valida credenciais, retorna JWT
+- Senhas hasheadas com bcryptjs (salt 10)
+- Comparação timing-safe: bcrypt roda mesmo quando o e-mail não existe
+- JWT com expiração de 7 dias, secret via variável de ambiente
+
+**Segurança:**
+
+- `JwtGuarda` em todos os controllers — qualquer rota sem token retorna 401
+- `LocalGuarda` no login via Passport Strategy
+- `usuarioId` extraído do JWT no servidor — nunca aceito do body do cliente
+- Valor da venda calculado no servidor a partir de `produto.preco × quantidade`
+- Rate limiting global (60 req/min) + login restrito a 5 tentativas/min (`@Throttle`)
+- `ValidationPipe` com `whitelist` e `forbidNonWhitelisted` — rejeita campos não declarados nos DTOs
+- CORS restrito a `http://localhost:3000`
+
+**Regras de negócio (Service Layer):**
+
+- Criação de venda em transação atômica: valida estoque → decrementa → cria venda
+- Cancelamento de venda devolve a quantidade ao estoque na mesma transação
+- Estoque insuficiente lança `BadRequestException` antes de qualquer escrita
+
+**Integração front-end:**
+
+- `lib/api.ts` — cliente HTTP centralizado com Bearer token automático e normalização de respostas
+- 401 redireciona para `/login` e limpa o token local
+- Erros do backend (400, 404, 409) exibidos via toast
+- Dashboard, vendas, estoque e finanças consumindo dados reais do backend
+- Sidebar exibe nome do usuário autenticado; logout encerra sessão e remove token
 
 ## Estrutura
 
@@ -49,7 +78,6 @@ fullstack/
 │       ├── (auth)/
 │       │   ├── login/page.tsx
 │       │   └── cadastro/page.tsx
-│       ├── api/                   ← mock (substituído no D5)
 │       ├── dashboard/
 │       │   ├── layout.tsx
 │       │   ├── page.tsx
@@ -57,10 +85,11 @@ fullstack/
 │       │   ├── estoque/page.tsx
 │       │   └── vendas/page.tsx
 │       ├── components/
-│       │   ├── ui/
-│       │   ├── compostos/
-│       │   └── blocos/
-│       ├── contexts/
+│       │   ├── ui/          ← Botao, Campo, Emblema, Divisor, Spinner, Toast, Modal
+│       │   ├── compostos/   ← CampoRotulado, CartaoMetrica, ItemNav
+│       │   └── blocos/      ← Sidebar, Topbar, CascoLayout, GuardaAuth
+│       ├── contexts/        ← ToastContext, NavegacaoContext
+│       ├── lib/             ← api.ts, auth.ts
 │       ├── types/
 │       ├── layout.tsx
 │       └── page.tsx
@@ -72,6 +101,10 @@ fullstack/
         ├── main.ts
         ├── app.module.ts
         ├── prisma/
+        ├── auth/
+        │   ├── dto/
+        │   ├── estrategias/  ← local.estrategia.ts, jwt.estrategia.ts
+        │   └── guardas/      ← jwt.guarda.ts, local.guarda.ts
         ├── usuarios/
         ├── vendas/
         ├── estoque/
@@ -80,20 +113,7 @@ fullstack/
 
 ## Protótipo
 
-> Link Figma: [Figma](https://www.figma.com/design/zepJqvuStQap501MYW3pyQ/ERP?node-id=29-120&t=VdUnYthv31phVkXy-1)
-
-## Stack
-
-| Camada | Tecnologia |
-|--------|-----------|
-| Framework | Next.js 16 (App Router) |
-| Linguagem | TypeScript 5 |
-| Estilização | Tailwind CSS v4 |
-| Formulários | React Hook Form + Zod |
-| Back-end | NestJS + Prisma ORM |
-| Banco | PostgreSQL |
-| Auth | JWT |
-| Docs | Swagger |
+[Figma](https://www.figma.com/design/zepJqvuStQap501MYW3pyQ/ERP?node-id=29-120&t=VdUnYthv31phVkXy-1)
 
 ## Setup
 
@@ -103,14 +123,17 @@ cd frontend
 npm install
 npm run dev
 ```
-Acesse em [http://localhost:3000](http://localhost:3000)
+Acesse em `http://localhost:3000`
 
 **Backend**
 ```bash
 cd backend
-cp .env.example .env   # configurar DATABASE_URL
+cp .env.example .env   # preencher DATABASE_URL e JWT_SECRET
 npm install
-npx prisma migrate dev --name init
+npx prisma migrate dev
 npm run start:dev
 ```
-API em [http://localhost:3001](http://localhost:3001) — Swagger em [http://localhost:3001/api](http://localhost:3001/api)
+API em `http://localhost:3001` — Swagger em `http://localhost:3001/api`
+
+
+teste de conta

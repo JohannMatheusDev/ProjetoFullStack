@@ -12,6 +12,7 @@ import { Botao } from "@/app/components/ui/Botao";
 import { Modal } from "@/app/components/ui/Modal";
 import { Spinner } from "@/app/components/ui/Spinner";
 import { useToast } from "@/app/contexts/ToastContext";
+import { financas as financasApi } from "@/app/lib/api";
 import type { Lancamento, TipoLancamento } from "@/app/types";
 
 const corTipo: Record<TipoLancamento, string> = {
@@ -27,8 +28,12 @@ const esquema = z.object({
 
 type FormLancamento = z.infer<typeof esquema>;
 
+function parsearValor(val: string): number {
+  return parseFloat(val.replace(/\./g, "").replace(",", ".")) || 0;
+}
+
 function formatarMoeda(n: number): string {
-  return "R$ " + n.toLocaleString("pt-BR");
+  return "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
 }
 
 export default function Financas() {
@@ -48,27 +53,27 @@ export default function Financas() {
   });
 
   const recarregar = async () => {
-    const res = await fetch("/api/financas");
-    const dados = (await res.json()) as Lancamento[];
+    const dados = await financasApi.listar();
     setLancamentos(dados);
   };
 
   useEffect(() => {
-    fetch("/api/financas")
-      .then((r) => r.json() as Promise<Lancamento[]>)
+    financasApi
+      .listar()
       .then((dados) => {
         setLancamentos(dados);
         setCarregando(false);
-      });
+      })
+      .catch(() => setCarregando(false));
   }, []);
 
   const { totalEntradas, totalSaidas, saldo } = useMemo(() => {
     const entradas = lancamentos
       .filter((l) => l.tipo === "entrada")
-      .reduce((acc, l) => acc + parseFloat(l.valor.replace(",", ".")), 0);
+      .reduce((acc, l) => acc + parsearValor(l.valor), 0);
     const saidas = lancamentos
       .filter((l) => l.tipo === "saida")
-      .reduce((acc, l) => acc + parseFloat(l.valor.replace(",", ".")), 0);
+      .reduce((acc, l) => acc + parsearValor(l.valor), 0);
     return { totalEntradas: entradas, totalSaidas: saidas, saldo: entradas - saidas };
   }, [lancamentos]);
 
@@ -80,19 +85,19 @@ export default function Financas() {
   ];
 
   const aoEnviar = async (dados: FormLancamento) => {
-    const res = await fetch("/api/financas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dados),
-    });
-    if (!res.ok) {
-      exibir("Erro ao registrar lançamento.", "erro");
-      return;
+    try {
+      await financasApi.criar({
+        descricao: dados.descricao,
+        tipo: dados.tipo,
+        valor: parsearValor(dados.valor),
+      });
+      await recarregar();
+      exibir("Lançamento registrado!", "sucesso");
+      reset({ descricao: "", tipo: "entrada", valor: "" });
+      setModalAberto(false);
+    } catch (e) {
+      exibir(e instanceof Error ? e.message : "Erro ao registrar lançamento.", "erro");
     }
-    await recarregar();
-    exibir("Lançamento registrado!", "sucesso");
-    reset({ descricao: "", tipo: "entrada", valor: "" });
-    setModalAberto(false);
   };
 
   return (
@@ -101,7 +106,7 @@ export default function Financas() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Finanças</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">Março 2026</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">Maio 2026</p>
           </div>
           <Botao tamanho="sm" onClick={() => setModalAberto(true)}>
             <Plus size={14} />

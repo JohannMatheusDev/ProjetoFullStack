@@ -1,10 +1,13 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { EstoqueService } from './estoque.service';
 import { CriarProdutoDto } from './dto/criar-produto.dto';
 import { AtualizarProdutoDto } from './dto/atualizar-produto.dto';
+import { JwtGuarda } from '../auth/guardas/jwt.guarda';
 
 @ApiTags('Estoque')
+@ApiBearerAuth()
+@UseGuards(JwtGuarda)
 @Controller('estoque')
 export class EstoqueController {
   constructor(private readonly service: EstoqueService) {}

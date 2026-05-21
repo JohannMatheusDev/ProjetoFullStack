@@ -1,9 +1,13 @@
-import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Get, Post, Delete, Param, Body, UseGuards, Req, ForbiddenException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import type { Request } from 'express';
 import { UsuariosService } from './usuarios.service';
 import { CriarUsuarioDto } from './dto/criar-usuario.dto';
+import { JwtGuarda } from '../auth/guardas/jwt.guarda';
 
 @ApiTags('Usuários')
+@ApiBearerAuth()
+@UseGuards(JwtGuarda)
 @Controller('usuarios')
 export class UsuariosController {
   constructor(private readonly service: UsuariosService) {}
@@ -28,7 +32,8 @@ export class UsuariosController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remover usuário' })
-  remover(@Param('id') id: string) {
+  remover(@Param('id') id: string, @Req() req: Request & { user: { id: string } }) {
+    if (id === req.user.id) throw new ForbiddenException('Não é possível remover a própria conta');
     return this.service.remover(id);
   }
 }

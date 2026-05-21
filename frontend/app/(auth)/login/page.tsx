@@ -10,7 +10,7 @@ import { CampoRotulado } from "@/app/components/compostos/CampoRotulado";
 import { Botao } from "@/app/components/ui/Botao";
 import { Divisor } from "@/app/components/ui/Divisor";
 import { useToast } from "@/app/contexts/ToastContext";
-import { autenticar, salvarSessao } from "@/app/lib/authMock";
+import { login } from "@/app/lib/auth";
 
 const esquema = z.object({
   email: z.string().min(1, "Obrigatório").email("E-mail inválido"),
@@ -29,13 +29,11 @@ export default function Login() {
   } = useForm<FormLogin>({ resolver: zodResolver(esquema) });
 
   const aoEnviar = async (dados: FormLogin) => {
-    await new Promise((r) => setTimeout(r, 600));
-    const resultado = autenticar(dados.email, dados.senha);
+    const resultado = await login(dados.email, dados.senha);
     if (!resultado.ok) {
-      exibir("E-mail ou senha incorretos.", "erro");
+      exibir(resultado.erro ?? "Erro ao entrar.", "erro");
       return;
     }
-    salvarSessao(resultado.nome!);
     exibir(`Bem-vindo, ${resultado.nome}!`, "sucesso");
     router.push("/dashboard");
   };

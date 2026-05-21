@@ -10,7 +10,7 @@ import { CampoRotulado } from "@/app/components/compostos/CampoRotulado";
 import { Botao } from "@/app/components/ui/Botao";
 import { Divisor } from "@/app/components/ui/Divisor";
 import { useToast } from "@/app/contexts/ToastContext";
-import { registrarUsuario, salvarSessao } from "@/app/lib/authMock";
+import { cadastrar } from "@/app/lib/auth";
 
 const esquema = z
   .object({
@@ -36,13 +36,11 @@ export default function Cadastro() {
   } = useForm<FormCadastro>({ resolver: zodResolver(esquema) });
 
   const aoEnviar = async (dados: FormCadastro) => {
-    await new Promise((r) => setTimeout(r, 600));
-    const resultado = registrarUsuario({ nome: dados.nome, email: dados.email, senha: dados.senha });
+    const resultado = await cadastrar(dados.nome, dados.email, dados.senha);
     if (!resultado.ok) {
       exibir(resultado.erro ?? "Erro ao criar conta.", "erro");
       return;
     }
-    salvarSessao(dados.nome);
     exibir("Conta criada com sucesso!", "sucesso");
     router.push("/dashboard");
   };

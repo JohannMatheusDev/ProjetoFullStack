@@ -12,8 +12,8 @@ import { Botao } from "@/app/components/ui/Botao";
 import { Modal } from "@/app/components/ui/Modal";
 import { Spinner } from "@/app/components/ui/Spinner";
 import { useToast } from "@/app/contexts/ToastContext";
+import { estoque as estoqueApi } from "@/app/lib/api";
 import type { Produto, StatusProduto, VarianteEmblema } from "@/app/types";
-
 
 const varianteStatus: Record<StatusProduto, VarianteEmblema> = {
   normal: "sucesso",
@@ -38,6 +38,10 @@ type FormProduto = z.infer<typeof esquema>;
 
 type ModoModal = "criar" | "editar" | null;
 
+function parsearPreco(val: string): number {
+  return parseFloat(val.replace(/\./g, "").replace(",", ".")) || 0;
+}
+
 export default function Estoque() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -52,26 +56,29 @@ export default function Estoque() {
     formState: { errors, isSubmitting },
   } = useForm<FormProduto>({ resolver: zodResolver(esquema) });
 
-  const metricas = useMemo(() => [
-    { titulo: "Total em estoque", valor: produtos.reduce((a, p) => a + p.quantidade, 0).toLocaleString("pt-BR"), variacao: -3.2, icone: Package },
-    { titulo: "Entradas no mês", valor: "842", variacao: 5.4, icone: PackageOpen },
-    { titulo: "Itens críticos", valor: String(produtos.filter((p) => p.status === "critico").length), variacao: -8.1, icone: AlertTriangle },
-    { titulo: "Giro médio", valor: "4.2x", variacao: 2.1, icone: BarChart3 },
-  ], [produtos]);
+  const metricas = useMemo(
+    () => [
+      { titulo: "Total em estoque", valor: produtos.reduce((a, p) => a + p.quantidade, 0).toLocaleString("pt-BR"), variacao: -3.2, icone: Package },
+      { titulo: "Entradas no mês", valor: "842", variacao: 5.4, icone: PackageOpen },
+      { titulo: "Itens críticos", valor: String(produtos.filter((p) => p.status === "critico").length), variacao: -8.1, icone: AlertTriangle },
+      { titulo: "Giro médio", valor: "4.2x", variacao: 2.1, icone: BarChart3 },
+    ],
+    [produtos],
+  );
 
   const recarregar = async () => {
-    const res = await fetch("/api/estoque");
-    const dados = (await res.json()) as Produto[];
+    const dados = await estoqueApi.listar();
     setProdutos(dados);
   };
 
   useEffect(() => {
-    fetch("/api/estoque")
-      .then((r) => r.json() as Promise<Produto[]>)
+    estoqueApi
+      .listar()
       .then((dados) => {
         setProdutos(dados);
         setCarregando(false);
-      });
+      })
+      .catch(() => setCarregando(false));
   }, []);
 
   const abrirCriar = () => {
@@ -98,45 +105,30 @@ export default function Estoque() {
   };
 
   const aoEnviar = async (dados: FormProduto) => {
-    if (modoModal === "criar") {
-      const res = await fetch("/api/estoque", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dados),
-      });
-      if (!res.ok) {
-        exibir("Erro ao adicionar produto.", "erro");
-        return;
+    try {
+      const precoNum = parsearPreco(dados.preco);
+      if (modoModal === "criar") {
+        await estoqueApi.criar({ ...dados, preco: precoNum });
+        exibir("Produto adicionado!", "sucesso");
+      } else if (modoModal === "editar" && produtoAtivo) {
+        await estoqueApi.atualizar(produtoAtivo.id, { ...dados, preco: precoNum });
+        exibir("Produto atualizado!", "sucesso");
       }
-      exibir("Produto adicionado!", "sucesso");
-    } else if (modoModal === "editar" && produtoAtivo) {
-      const res = await fetch("/api/estoque", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...dados, id: produtoAtivo.id }),
-      });
-      if (!res.ok) {
-        exibir("Erro ao atualizar produto.", "erro");
-        return;
-      }
-      exibir("Produto atualizado!", "sucesso");
+      await recarregar();
+      fecharModal();
+    } catch (e) {
+      exibir(e instanceof Error ? e.message : "Erro ao salvar produto.", "erro");
     }
-    await recarregar();
-    fecharModal();
   };
 
   const remover = async (produto: Produto) => {
-    const res = await fetch("/api/estoque", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: produto.id }),
-    });
-    if (!res.ok) {
-      exibir("Erro ao remover produto.", "erro");
-      return;
+    try {
+      await estoqueApi.remover(produto.id);
+      await recarregar();
+      exibir(`"${produto.nome}" removido.`, "aviso");
+    } catch (e) {
+      exibir(e instanceof Error ? e.message : "Erro ao remover produto.", "erro");
     }
-    await recarregar();
-    exibir(`"${produto.nome}" removido.`, "aviso");
   };
 
   return (
@@ -145,7 +137,7 @@ export default function Estoque() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-base font-semibold text-zinc-900 dark:text-white">Estoque</h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">Março 2026</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">Maio 2026</p>
           </div>
           <Botao tamanho="sm" onClick={abrirCriar}>
             <Plus size={14} />
