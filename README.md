@@ -136,4 +136,10 @@ npm run start:dev
 API em `http://localhost:3001` — Swagger em `http://localhost:3001/api`
 
 
-teste de conta
+# Adendo importante Commits 
+```
+d26e18f D5 Fix
+938a767 Dados do banco
+9e7cd3e Preparando integração D5
+```
+**Foram Apagados por push force e repostos """quase""" sem perdas por (D5 Reup pos bug - 58c1ede)**
