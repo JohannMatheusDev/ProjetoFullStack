@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificacoesGateway } from '../notificacoes/notificacoes.gateway';
 import { CriarProdutoDto } from './dto/criar-produto.dto';
 import { AtualizarProdutoDto } from './dto/atualizar-produto.dto';
 
@@ -13,7 +14,10 @@ function calcularStatus(quantidade: number): StatusProduto {
 
 @Injectable()
 export class EstoqueService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificacoes: NotificacoesGateway,
+  ) {}
 
   async criar(dto: CriarProdutoDto) {
     const produto = await this.prisma.produto.create({ data: dto });
@@ -34,7 +38,11 @@ export class EstoqueService {
   async atualizar(id: string, dto: AtualizarProdutoDto) {
     await this.buscarPorId(id);
     const produto = await this.prisma.produto.update({ where: { id }, data: dto });
-    return { ...produto, status: calcularStatus(produto.quantidade) };
+    const status = calcularStatus(produto.quantidade);
+    if (status === 'critico') {
+      this.notificacoes.emitir('estoque:critico', { id: produto.id, nome: produto.nome, quantidade: produto.quantidade });
+    }
+    return { ...produto, status };
   }
 
   async remover(id: string) {

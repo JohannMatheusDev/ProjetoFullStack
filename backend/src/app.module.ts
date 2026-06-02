@@ -8,6 +8,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
 import { VendasModule } from './vendas/vendas.module';
 import { EstoqueModule } from './estoque/estoque.module';
 import { FinancasModule } from './financas/financas.module';
+import { NotificacoesModule } from './notificacoes/notificacoes.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { FinancasModule } from './financas/financas.module';
     VendasModule,
     EstoqueModule,
     FinancasModule,
+    NotificacoesModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

@@ -34,6 +34,6 @@ export class UsuariosController {
   @ApiOperation({ summary: 'Remover usuário' })
   remover(@Param('id') id: string, @Req() req: Request & { user: { id: string } }) {
     if (id === req.user.id) throw new ForbiddenException('Não é possível remover a própria conta');
-    return this.service.remover(id);
+    throw new ForbiddenException('Operação requer privilégios de administrador');
   }
 }

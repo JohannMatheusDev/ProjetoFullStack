@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { StatusVenda } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificacoesGateway } from '../notificacoes/notificacoes.gateway';
 import { CriarVendaDto } from './dto/criar-venda.dto';
 import { AtualizarVendaDto } from './dto/atualizar-venda.dto';
 
 @Injectable()
 export class VendasService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificacoes: NotificacoesGateway,
+  ) {}
 
   async criar(dto: CriarVendaDto, usuarioId: string) {
     return this.prisma.$transaction(async (tx) => {
@@ -17,23 +21,26 @@ export class VendasService {
         if (!produto) throw new NotFoundException('Produto não encontrado');
 
         const qtd = dto.quantidade ?? 1;
-        if (produto.quantidade < qtd) {
+        valorFinal = Number(produto.preco) * qtd;
+
+        const atualizado = await tx.produto.updateMany({
+          where: { id: dto.produtoId, quantidade: { gte: qtd } },
+          data: { quantidade: { decrement: qtd } },
+        });
+
+        if (atualizado.count === 0) {
           throw new BadRequestException(
             `Estoque insuficiente. Disponível: ${produto.quantidade} un.`,
           );
         }
-
-        valorFinal = Number(produto.preco) * qtd;
-
-        await tx.produto.update({
-          where: { id: dto.produtoId },
-          data: { quantidade: { decrement: qtd } },
-        });
       }
 
-      return tx.venda.create({
+      const venda = await tx.venda.create({
         data: { ...dto, valor: valorFinal, quantidade: dto.quantidade ?? 1, usuarioId },
       });
+
+      this.notificacoes.emitir('venda:criada', { id: venda.id, cliente: venda.cliente, valor: venda.valor });
+      return venda;
     });
   }
 
@@ -75,7 +82,9 @@ export class VendasService {
         });
       }
 
-      return tx.venda.update({ where: { id }, data: dto });
+      const atualizada = await tx.venda.update({ where: { id }, data: dto });
+      this.notificacoes.emitir('venda:atualizada', { id: atualizada.id, status: atualizada.status });
+      return atualizada;
     });
   }
 
